@@ -2,16 +2,21 @@
 % Diego Lorenzo-Casabuena Gonzalez, 2017. Prof. Dan Feldman
 %%
 
-function [final_set,lowest_cost] = k_means(P,k,j,mode)
+function [final_set,lowest_cost] = k_means(P,W,k,j,mode)
+
+% First, check the input weights vector. If program is used without coresets, weights 
+% are set to 1 by default. Else, custom weights are used.
+[P_rows,P_cols] = size(P);
+if size(W) ~= P_cols
+    W = ones(1,P_cols);
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%
 % 1) Find all subsets of size k of the points set, P.
 %       Uses basis vectors and an indexing from nchoosek
 %%%%%%%%%%%%%%%%%%%%%%%%%%
 
-[P_rows,P_cols] = size(P);
 choice_j = reshape(nchoosek(1:P_cols,j+1)',[1,nchoosek(P_cols,j+1)*size(nchoosek(1:P_cols,j+1),2)]); % Get all subsets of length j as a vector of indices.
-col_dim_j = (j+1)*nchoosek(P_cols,(j+1));
 id_P = eye(P_cols); % Basis vectors
 j_matrix = id_P(:,choice_j);  %Construct matrix from basis vectors
 set_of_jsubspaces = P*j_matrix; % Get all subspaces of size j using matrix of basis vectors
@@ -45,9 +50,9 @@ for i = 1:num_j_subspaces
     %% Find norms of all matrices 
     for j_ = 1:P_cols
         if mode == 2
-            norms_matrix(i,j_) = sqrt(sum(dist_tensor(:,j_,i).^mode)); % k-means
+            norms_matrix(i,j_) = sqrt(sum(dist_tensor(:,j_,i).^mode))*W(j_); % k-means
         else
-            norms_matrix(i,j_) = sum(dist_tensor(:,j_,i)); % k-median
+            norms_matrix(i,j_) = sum(dist_tensor(:,j_,i))*W(j_); % k-median
         end
     end
 end
@@ -73,6 +78,7 @@ for i = 1:num_k_sets     % For every set of subspaces
     end  
 end
     
+
 % Get set of j-subspaces (and the subspaces themselves) at index best_set
 final_set = zeros(P_rows,j+1,k);
 j_index = choice_k(:,k*(best_set-1)+1:k*best_set);
