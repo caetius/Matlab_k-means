@@ -37,24 +37,13 @@ num_k_sets = size(choice_k,2) / k; % Number of candidate solutions
 %   results in a tensor
 %%%%%%%%%%%%%%%%%%%%%%%%%%
 
-dist_tensor = zeros(P_rows,P_cols,num_j_subspaces); % Store disances between all points in P and each j-th subspace. Each set of distances is a matrix nxd
-norms_matrix = zeros(P_cols,num_j_subspaces);
+norms_matrix = zeros(num_j_subspaces,P_cols);
 for i = 1:num_j_subspaces
+ 
     first_col = (j+1)*(i-1)+1; % Get next index of first element in subspace (each subspace is separated by j cols)
     subspace = set_of_jsubspaces(:,first_col:first_col+j); % Find current subspace
-    translation = sum(subspace,2)/size(subspace,2);
-    subspace_t = bsxfun(@minus,subspace,translation); % translate subspace so that it passes through the origin
-    P_t = bsxfun(@minus,P,translation);
-    [subspace_t,R] = qr(subspace_t,0); % Orthogonalise columns to form basis with QR
-    dist_tensor(:,:,i) = (subspace_t*inv(subspace_t'*subspace_t)*subspace_t')*P_t - P_t; % Compute distances between all points and their projection in the ith j-subspace
-    %% Find norms of all matrices 
-    for j_ = 1:P_cols
-        if mode == 2
-            norms_matrix(i,j_) = sqrt(sum(dist_tensor(:,j_,i).^mode))*W(j_); % k-means
-        else
-            norms_matrix(i,j_) = sum(dist_tensor(:,j_,i))*W(j_); % k-median
-        end
-    end
+    [proj, basis, subspace_t] = projectPointsOntoSubspace(P, subspace)
+    norms_matrix(i,:) = findDistanceScore(P, proj, mode, W);
 end
 
 
@@ -80,10 +69,19 @@ end
     
 
 % Get set of j-subspaces (and the subspaces themselves) at index best_set
+% Subspaces are given as basis of vectors
 final_set = zeros(P_rows,j+1,k);
 j_index = choice_k(:,k*(best_set-1)+1:k*best_set);
 for i = 1:k
+    size(set_of_jsubspaces(:,j_index(i):j_index(i)+j))
+    size(final_set)
     final_set(:,:,i) = set_of_jsubspaces(:,j_index(i):j_index(i)+j);
+    %my_set = set_of_jsubspaces(:,j_index(i):j_index(i)+j);
+    %translation = my_set(:,1);
+    %my_set_t = bsxfun(@minus,my_set,translation); % Make j vectors from j+1 points
+    %[Q,R] = qr(my_set_t(:,2:size(my_set_t,2)),0);
+    %final_set(:,:,i) = bsxfun(@plus,Q,translation);
+    
 end
 % end fn
 end
