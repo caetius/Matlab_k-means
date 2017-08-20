@@ -42,7 +42,7 @@ for i = 1:num_j_subspaces
  
     first_col = (j+1)*(i-1)+1; % Get next index of first element in subspace (each subspace is separated by j cols)
     subspace = set_of_jsubspaces(:,first_col:first_col+j); % Find current subspace
-    [proj, basis, subspace_t] = projectPointsOntoSubspace(P, subspace)
+    [proj, ~, ~] = projectPointsOntoSubspace(P, subspace);
     norms_matrix(i,:) = findDistanceScore(P, proj, mode, W);
 end
 
@@ -73,15 +73,7 @@ end
 final_set = zeros(P_rows,j+1,k);
 j_index = choice_k(:,k*(best_set-1)+1:k*best_set);
 for i = 1:k
-    size(set_of_jsubspaces(:,j_index(i):j_index(i)+j))
-    size(final_set)
-    final_set(:,:,i) = set_of_jsubspaces(:,j_index(i):j_index(i)+j);
-    %my_set = set_of_jsubspaces(:,j_index(i):j_index(i)+j);
-    %translation = my_set(:,1);
-    %my_set_t = bsxfun(@minus,my_set,translation); % Make j vectors from j+1 points
-    %[Q,R] = qr(my_set_t(:,2:size(my_set_t,2)),0);
-    %final_set(:,:,i) = bsxfun(@plus,Q,translation);
-    
+    final_set(:,:,i) = set_of_jsubspaces(:,j_index(i):j_index(i)+j);    
 end
 % end fn
 end

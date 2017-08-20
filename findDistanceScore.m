@@ -1,6 +1,8 @@
 % Find vector of distances between two sets of points
 % Input: Two sets of points (mxn) and a mode (1=median, 2=mean)
 % Output: Vector of weighted distances (1xn)
+% Diego Lorenzo-Casabuena Gonzalez, 2017. Prof. Dan Feldman
+%%
 function [scores] = findDistanceScore(points1, points2, mode, weights)
 
 if size(points1) ~= size(points2)
