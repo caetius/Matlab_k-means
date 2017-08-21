@@ -34,8 +34,11 @@ function [set,error] = k_means_by_coreset_reduction(P,k,j,mode)
         data_points_proj_ind = zeros(2*input_dims(1)+1,size(point_subset,2));
         
        % Iterate through every point and assign it to its closest subspace
+       % NOTE: getIndexOfShortestProjection returns a shifted projection.
+       % Points must be shifted when used in calculations with the
+       % projection. Shift = first column of subspace.
        for i = 1:size(point_subset,2)
-           [index, proj] = getIndexOfShortestProjection(point_subset(:,i), L); 
+           [index, proj] = getIndexOfShortestProjection(point_subset(:,i), L, mode); 
            data_points_proj_ind(1:input_dims(1),i) = point_subset(:,i);
            data_points_proj_ind(input_dims(1)+1:2*input_dims(1),i) = proj;
            data_points_proj_ind(2*input_dims(1)+1,i) = index;
@@ -46,7 +49,7 @@ function [set,error] = k_means_by_coreset_reduction(P,k,j,mode)
        points_final = zeros(input_dims(1),1);
        for i = 1:size(L,3)
            subspace_points = data_points_proj_ind(:,ismember(data_points_proj_ind(2*input_dims(1)+1,:),i));
-           imp = [imp (importance_of_projection(subspace_points(input_dims(1)+1:2*input_dims(1),:), mode) + importance_of_points(subspace_points(1:input_dims(1),:),subspace_points(input_dims(1)+1:2*input_dims(1),:),mode))];
+           imp = [imp (importance_of_projection(subspace_points(input_dims(1)+1:2*input_dims(1),:), mode) + importance_of_points(subspace_points(1:input_dims(1),:),subspace_points(input_dims(1)+1:2*input_dims(1),:),mode,L(:,1,i)))];
            points_final = [points_final subspace_points(1:input_dims(1),:)];
        end
        imp = imp(2:size(imp,2));  % Remove first index containing initial zero value
@@ -104,8 +107,9 @@ end
 
 % Calculate importance of points based on distance to projection / total
 % projection distance
-function [P_imp] = importance_of_points(points,proj,mode)
+function [P_imp] = importance_of_points(points,proj,mode, p_shift)
     P_imp = zeros(1,size(points,2));
+    points = bsxfun(@minus,points,p_shift); % Shift points so they follow the same coordinate system as that used when calculating the projection.
     total_proj = sum(norm(sum(proj-points,2),mode));    % Sum of distances from all points to their projections
     for i = 1:size(points,2)
         P_imp(i) = sum(norm(proj(i)-points(i),mode))/total_proj;    % Importance = distance from point to projection / Sum of distances from all points to their projections

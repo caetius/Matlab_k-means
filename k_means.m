@@ -39,11 +39,10 @@ num_k_sets = size(choice_k,2) / k; % Number of candidate solutions
 
 norms_matrix = zeros(num_j_subspaces,P_cols);
 for i = 1:num_j_subspaces
- 
     first_col = (j+1)*(i-1)+1; % Get next index of first element in subspace (each subspace is separated by j cols)
     subspace = set_of_jsubspaces(:,first_col:first_col+j); % Find current subspace
-    [proj, ~, ~] = projectPointsOntoSubspace(P, subspace);
-    norms_matrix(i,:) = findDistanceScore(P, proj, mode, W);
+    [~, ~, ~, dist] = projectPointsOntoSubspace(P, subspace);
+    norms_matrix(i,:) = findDistanceScore(dist, mode, W);
 end
 
 
